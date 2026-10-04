@@ -1,0 +1,405 @@
+{
+  "name": "PROYECTO IA",
+  "nodes": [
+    {
+      "parameters": {
+        "sendTo": "={{ $json.EMAIL }}",
+        "subject": "=Propuesta Comercial - {{ $json.NOMBRE_CLIENTE }}",
+        "message": "={{ $json.PROPUESTA_IA }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        -48,
+        96
+      ],
+      "id": "f46e7da9-3849-42ab-b29c-ae2c35a98cfe",
+      "name": "Send a message",
+      "webhookId": "9f5ace73-b2f2-44c2-870b-f266777257b3",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "uO5l51KDxBzUJiu3",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "dataSourceId": {
+          "__rl": true,
+          "value": "3de17555-c267-80eb-b979-000b96cd271f",
+          "mode": "list",
+          "cachedResultName": "PROYECTO IA",
+          "cachedResultUrl": "https://app.notion.com/p/3de17555c2678007bee0c1c6fbe3c4ec"
+        }
+      },
+      "type": "n8n-nodes-base.notionTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -800,
+        -176
+      ],
+      "id": "56f64afd-009c-4a8a-be40-6b641b7733a9",
+      "name": "Notion Trigger",
+      "credentials": {
+        "notionApi": {
+          "id": "kx4BeohAqCaT1iFR",
+          "name": "Notion account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-3.5-flash-lite",
+          "mode": "list",
+          "cachedResultName": "models/gemini-3.5-flash-lite"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=Actúa como un consultor experto en automatización e inteligencia artificial, responde SIEMPRE en Español.\n\nSi el cliente solicita un REQUERIMIENTO de automatización genera una propuesta comercial profesional, clara y concisa para el siguiente cliente:\n\nCliente: {{ $json.NOMBRE_CLIENTE }}\nRequerimiento: {{ $json.REQUERIMIENTO }}\n\nLa propuesta debe incluir:\n1. Resumen del proyecto.\n2. Alcance técnico de las automatizaciones requeridas.\n3. Estimación de tiempos de entrega y recomendaciones finales.\n\"Redacta la propuesta lista para enviar. No utilices corchetes, variables sin rellenar ni textos de relleno como [Tu Nombre]. Usa como remitente 'Equipo de Consultoría en Automatización e IA'\"\n4. Presupuesto Estimado y Formas de Pago:\n   - Incluye una tabla o desglose con un costo estimado (por ejemplo, entre $300 USD y $600 USD según la complejidad).\n   - Detalla las condiciones de pago (ej. 50% al inicio, 50% al finalizar).\nLa propuesta no puede tener más de 2000 caracteres.\n\nREGLA PRINCIPAL:\n1. Analiza el requerimiento del cliente: {{ $json.REQUERIMIENTO }}\n2. Si el requerimiento NO está relacionado con automatización de procesos, desarrollo web/software, integración de sistemas o inteligencia artificial, responde ÚNICAMENTE con el siguiente mensaje de rechazo:\n\"Estimado/a cliente, no podemos generar una propuesta para esta solicitud ya que no está dentro de nuestro ámbito de especialización (automatización de procesos, software e IA).\"\n3. Si el requerimiento SÍ está relacionado con nuestros servicios, genera la propuesta comercial correspondiente estructurada en Resumen, Alcance técnico, Tiempos y Presupuesto."
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {
+          "systemMessage": "Eres un asistente especializado ÚNICAMENTE en redactar propuestas comerciales para servicios de automatización de procesos, desarrollo de software e Inteligencia Artificial.  REGLA STRICTA DE EVALUACIÓN: 1. Lee detenidamente el requerimiento proporcionado. 2. Si el requerimiento NO tiene relación con la automatización de procesos, desarrollo de software, integraciones, CRM o inteligencia artificial (por ejemplo: adiestrar o criar animales, cocina, servicios personales, etc.), responde ÚNICAMENTE con el siguiente mensaje exacto:  \"Estimado/a cliente, no podemos generar una propuesta comercial para esta solicitud ya que no está dentro de nuestro catálogo de servicios (automatización, software e IA).\"  3. Si el requerimiento SÍ corresponde a nuestras áreas de especialidad, redacta la propuesta comercial profesional completa.",
+          "temperature": 1
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1.2,
+      "position": [
+        -368,
+        -192
+      ],
+      "id": "f05726b0-86b9-4ebe-9df2-65689b3cde6a",
+      "name": "Message a model",
+      "alwaysOutputData": false,
+      "executeOnce": false,
+      "retryOnFail": false,
+      "credentials": {
+        "googlePalmApi": {
+          "id": "VsFudFRNqsc6RbrM",
+          "name": "Google Gemini(PaLM) Api account 2"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "update",
+        "pageId": {
+          "__rl": true,
+          "value": "={{ $('Notion Trigger').item.json.id }}",
+          "mode": "id"
+        },
+        "propertiesUi": {
+          "propertyValues": [
+            {
+              "key": "=PROPUESTA_IA|rich_text",
+              "textContent": "={{ $json.content.parts[0].text }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 3,
+      "position": [
+        208,
+        -304
+      ],
+      "id": "e8f60490-80dd-430b-b0da-3ef5974c6ddb",
+      "name": "Update a database page",
+      "credentials": {
+        "notionApi": {
+          "id": "kx4BeohAqCaT1iFR",
+          "name": "Notion account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "39e68c1e-02ce-40ed-aef3-e9a2c337e12f",
+              "leftValue": "={{ $json.ESTADO }}",
+              "rightValue": "Listo",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.3,
+      "position": [
+        -336,
+        208
+      ],
+      "id": "791ba8f9-ab84-4187-803c-15143730dc24",
+      "name": "Filter"
+    },
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "dataSourceId": {
+          "__rl": true,
+          "value": "3de17555-c267-80eb-b979-000b96cd271f",
+          "mode": "list",
+          "cachedResultName": "PROYECTO IA",
+          "cachedResultUrl": "https://app.notion.com/p/3de17555c2678007bee0c1c6fbe3c4ec"
+        }
+      },
+      "type": "n8n-nodes-base.notionTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -592,
+        208
+      ],
+      "id": "b1fda5b2-4884-48e4-9faa-90b3bc19ac8c",
+      "name": "Notion Trigger1",
+      "credentials": {
+        "notionApi": {
+          "id": "kx4BeohAqCaT1iFR",
+          "name": "Notion account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "send",
+        "phoneNumberId": "1342287668964502",
+        "recipientPhoneNumber": "+59891743993",
+        "textBody": "={{ $json.PROPUESTA_IA }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1.1,
+      "position": [
+        -48,
+        304
+      ],
+      "id": "97d8d124-23c0-4875-a78a-885943f2e76f",
+      "name": "Send message",
+      "webhookId": "7f5622f4-cc7f-4c59-a12b-89749b5978b5",
+      "credentials": {
+        "whatsAppApi": {
+          "id": "Irr7Dx5rqXjSJNUj",
+          "name": "WhatsApp account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "update",
+        "pageId": {
+          "__rl": true,
+          "value": "={{ $('Notion Trigger').item.json.id }}",
+          "mode": "id"
+        },
+        "propertiesUi": {
+          "propertyValues": [
+            {
+              "key": "ESTADO|status",
+              "statusValue": "Error"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 3,
+      "position": [
+        208,
+        -112
+      ],
+      "id": "fe3d8a05-a405-41b3-adc2-f24625c274c3",
+      "name": "Update a database page1",
+      "credentials": {
+        "notionApi": {
+          "id": "kx4BeohAqCaT1iFR",
+          "name": "Notion account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "b23f15cc-18f5-4f57-ad8a-e28f23a8f393",
+              "leftValue": "={{ $json.ESTADO }}",
+              "rightValue": "En progreso",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            },
+            {
+              "id": "a02b3102-4b7a-44bc-9d9a-2b07d5bea893",
+              "leftValue": "={{ $json.REQUERIMIENTO }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -592,
+        -176
+      ],
+      "id": "28c6b0fd-95dc-4934-80dc-fee286b05884",
+      "name": "If"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Send a message": {
+      "main": [
+        []
+      ]
+    },
+    "Notion Trigger": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model": {
+      "main": [
+        [
+          {
+            "node": "Update a database page",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Update a database page1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update a database page": {
+      "main": [
+        []
+      ]
+    },
+    "Filter": {
+      "main": [
+        [
+          {
+            "node": "Send message",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Notion Trigger1": {
+      "main": [
+        [
+          {
+            "node": "Filter",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send message": {
+      "main": [
+        []
+      ]
+    },
+    "Update a database page1": {
+      "main": [
+        []
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "db805775-3dcd-4e17-b101-56528d6e6290",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "ad04b6f0c9f3c7c5dfe62a0ba9fd1683e5b20ab296163a42f87e6cf418c23003"
+  },
+  "nodeGroups": [],
+  "id": "FpaksE84tXEmIn9E",
+  "tags": []
+}
